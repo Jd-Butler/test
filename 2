@@ -1,0 +1,70 @@
+import csv
+import json
+
+
+def return_csv(path):
+    # Open json file
+    with open(path) as json_file:
+        data = json.load(json_file)
+
+    # Initialize variables to store the relevant data
+    interval = []
+    media = []
+    user_id = []
+    t_answered_count = []
+    t_answered_sum = []
+    t_handled_count = []
+    t_handled_sum = []
+    t_talk_complete_count = []
+    t_talk_complete_sum = []
+
+    # Iterate through list results
+    for first_level in data["results"]:
+        data = first_level["data"]
+        metrics = data[0]["metrics"]
+
+        media.append(first_level["group"]["mediaType"])  # media
+        user_id.append(first_level["group"]["userId"])  # userId
+        interval.append(data[0]["interval"])  # interval
+
+        # Initialize variables in case a metric is missing
+        t_ans_count = None
+        t_ans_sum = None
+        t_hand_count = None
+        t_hand_sum = None
+        t_compl_count = None
+        t_compl_sum = None
+
+        # Iterate through metrics
+        for m in metrics:
+            if m["metric"] == "tAnswered":
+                t_ans_count = m["stats"]["count"]  # tAnswered.count
+                t_ans_sum = m["stats"]["sum"]  # tAnswered.sum
+            if m["metric"] == "tHandle":
+                t_hand_count = m["stats"]["count"]  # tHandle.count
+                t_hand_sum = m["stats"]["sum"]  # tHandle.sum
+            if m["metric"] == "tTalkComplete":
+                t_compl_count = m["stats"]["count"]  # tTalkComplete.count
+                t_compl_sum = m["stats"]["sum"]  # tTalkComplete.sum
+
+        # Append each to the relevant list
+        t_answered_count.append(t_ans_count)
+        t_answered_sum.append(t_ans_sum)
+        t_handled_count.append(t_hand_count)
+        t_handled_sum.append(t_hand_sum)
+        t_talk_complete_count.append(t_compl_count)
+        t_talk_complete_sum.append(t_compl_sum)
+
+    # Create header and rows for the csv
+    header = ["Interval", "MediaType", "userID", "tAnswered.count", "tAnswered.Sum", "tHandled.count",
+              "tHandled.sum", "tTalkComplete.count", "tTalkComplete.Sum"]
+
+    rows = zip(interval, media, user_id, t_answered_count, t_answered_sum, t_handled_count,
+               t_handled_sum, t_talk_complete_count, t_talk_complete_sum)
+
+    # Write csv
+    with open("/content/converted_data.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(header)
+        for row in rows:
+            writer.writerow(row)
